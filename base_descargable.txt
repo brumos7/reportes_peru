@@ -1,0 +1,75 @@
+with base as (
+select 
+a1.counter counter,
+a1.receivedorderid,
+a1.trackingid,
+a1.deliverytypeid,
+a1.packages,
+a1.packagesize,
+a1.currentstatus,
+a1.updated_at,
+a1.price,
+row_number() over (partition by a.orderid order by a.created desc)numnum,
+a.statusid,
+a.created as created_logs,
+a1.created_at fec_creacion,
+a1.destionationadressid,
+a1.pickupadressid,
+a1.driverid,
+b.company,
+a1.clientid,
+a1.notes 
+from logsorders a
+left join orders a1
+on a.orderid = a1.id
+left join useraccounts b
+on a1.userid = b.id
+where a1.updated_at - time '05:00:00' >= date_trunc('days', current_timestamp - interval '2' month)
+and b.country = 'PER'
+order by 5,7
+),
+fechas as (
+select 
+counter,
+max(created_logs) filter (where statusid in ('1'))fec_crec,
+max(created_logs) filter (where statusid in ('2'))fec_recol,
+max(created_logs) filter (where statusid in ('6','12','19'))fec_ter
+from base
+group by counter
+)
+select 
+a.counter n_99,
+a.receivedorderid id_cliente_final,
+c.deliverytype,
+a.trackingid,
+a.packages,
+a.packagesize tamanio,
+a.price monto_a_cobrar,
+a.fec_creacion - time '05:00:00' fec_creacion,
+to_char(date_trunc('seconds',a.updated_at - time '05:00:00'), 'YYYY-MM-DD HH24:MI:SS') :: timestamp(0) fecha_ult,
+a.currentstatus,
+d.descriptiones,
+h.route route_origen,
+g.route route_dest,
+i.driversuser veloz,
+i.driversname nombre_veloz,
+a.company,
+j.phone tel_cliente,
+a.notes notas
+from base a
+left join fechas b 
+on a.counter = b.counter
+left join catypedeliveries c 
+on a.deliverytypeid = c.id
+left join catdestinationadress g
+on a.destionationadressid = g.id
+left join catpickupadress h
+on a.pickupadressid = h.id
+left join drivers i 
+on a.driverid = i.id
+left join catstatus d
+on a.currentstatus = d.code
+left join catclients j
+on a.clientid = j.id
+where numnum = 1
+order by fecha_ult desc

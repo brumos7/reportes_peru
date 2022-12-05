@@ -1,0 +1,5 @@
+per_data_server
+.ipynb_checkpoints
+api_token_access.json
+distritos.ipynb
+gen_python.py
