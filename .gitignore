@@ -3,3 +3,4 @@ per_data_server
 api_token_access.json
 distritos.ipynb
 gen_python.py
+cred.env
